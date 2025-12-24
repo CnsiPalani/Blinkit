@@ -1,0 +1,14 @@
+
+pandas
+numpy
+scikit-learn
+joblib
+plotly
+streamlit
+langchain
+langchain-openai
+langchain-chroma
+openai
+
+# For MySQL DB connection
+mysql-connector-python>=8.0.0
