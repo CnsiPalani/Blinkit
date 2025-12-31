@@ -9,6 +9,154 @@ from src.config import MODEL_PATH, LATE_THRESHOLD_MIN
 from src.utils import fetch_query
 from PIL import Image
 
+def show_login():
+    st.markdown(
+        """
+        <style>
+        .login-outer-wrap {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: #fff;
+            padding: 2.5rem 2rem 1.5rem 2rem;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(0,158,96,0.10), 0 1.5px 0 #b2dfdb;
+            border: 2px solid #b2dfdb;
+        }
+        </style>
+        <div >
+        """,
+        unsafe_allow_html=True
+    )
+    with st.form("login_form"):
+        st.markdown(
+            '<div style="display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">'
+            '<span style="font-size:2.2rem;color:#009e60;margin-right:0.5rem;">&#128274;</span>'
+            '<span style="font-size:2rem;font-weight:800;color:#009e60;">Login to Blinkit IQ</span>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        username = st.text_input("Username",value="admin")
+        password = st.text_input("Password", type="password",value="admin123")
+        st.markdown("""
+            <style>
+            .login-btn-center { display: flex; justify-content: center; margin-top: 1.2rem; }
+            .login-btn-center button {
+                background-color: #009e60 !important;
+                color: #fff !important;
+                font-weight: 600;
+                font-size: 1.1rem;
+                border-radius: 8px;
+                padding: 0.5rem 2.2rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        login_btn = st.form_submit_button(label="\U0001F512 Login", use_container_width=False)
+        if login_btn:
+            if username == "admin" and password == "admin123":
+                st.session_state["authenticated"] = True
+                st.success("Login successful! Redirecting...")
+                st.rerun()
+            else:
+                st.error("Invalid username or password.")
+    st.markdown('</div></div>', unsafe_allow_html=True)
+
+# Initialize authentication state
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+# Add logout button to sidebar for authenticated users, aligned at the bottom
+
+# Custom CSS for rounded icon logout button
+logout_css = '''
+    <style>
+    .logout-btn-bottom {
+        position: fixed;
+        left: 0;
+        top: 1.5rem;
+        width: 14rem;
+        z-index: 100;
+        padding-left: 1.5rem;
+    }
+    .logout-btn-bottom button:hover {
+        background-color: #e0f2f1 !important;
+        box-shadow: 0 4px 16px rgba(0,158,96,0.13);
+    }
+    .logout-icon-svg {
+        width: 26px;
+        height: 26px;
+        display: block;
+    }
+    .logout-btn-bottom button {
+        background-color: #fff !important;
+        color: #009e60 !important;
+        font-weight: 600;
+        font-size: 1.08rem;
+        border-radius: 50%;
+        border: 1.5px solid #009e60 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        box-shadow: 0 2px 8px rgba(0,158,96,0.07);
+        padding: 0;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    </style>
+'''
+st.markdown(logout_css, unsafe_allow_html=True)
+
+st.sidebar.markdown('''
+<style>
+.logout-btn-bottom button[data-testid="baseButton"] {
+    background: #FF4B5C !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    margin-bottom: 1.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.logout-btn-bottom button[data-testid="baseButton"]:hover {
+    background: #e53935 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(255,75,92,0.13);
+}
+</style>
+<div class="logout-btn-bottom"></div>
+''', unsafe_allow_html=True)
+
+# Streamlit logout button with power icon and tooltip
+if st.session_state["authenticated"]:
+    if st.sidebar.button('⏻', key='logout_btn', help='Logout and return to login page'):
+        st.session_state["authenticated"] = False
+        st.rerun()
+
+# Show login page if not authenticated (immediately after rerun)
+if not st.session_state["authenticated"]:
+    # Hide the sidebar with CSS
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {display: none !important;}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    show_login()
+    st.stop()
 
 # Set page config with favicon
 st.set_page_config(
@@ -17,7 +165,7 @@ st.set_page_config(
     page_icon='favicon-96x96.png'  # Use the local favicon
 )
 
-# Add background color and style for the main area and title, with an icon
+# Add background color, style, and a more descriptive title/subtitle
 st.markdown('''
     <style>
     .main-bg {
@@ -25,43 +173,50 @@ st.markdown('''
         padding: 32px 32px 8px 32px;
         border-radius: 18px;
         margin-bottom: 18px;
-            box-shadow: 0 4px 24px rgba(0,158,96,0.08), 0 1.5px 0 #b2dfdb;
-            border: 2px solid #b2dfdb;
+        box-shadow: 0 4px 24px rgba(0,158,96,0.08), 0 1.5px 0 #b2dfdb;
+        border: 2px solid #b2dfdb;
     }
     .main-title-row {
         display: flex;
         align-items: center;
         gap: 18px;
-            margin-bottom: 4px;
+        margin-bottom: 4px;
     }
     .main-title-icon {
         font-size: 3.0rem;
         margin-right: 6px;
-            filter: drop-shadow(0 2px 4px #b2dfdb);
+        filter: drop-shadow(0 2px 4px #b2dfdb);
     }
     .main-title {
         font-size: 1.8rem;
         font-weight: 800;
         color: #009e60;
         letter-spacing: 0.5px;
-            text-shadow: 0 1px 0 #fff, 0 2px 8px #b2dfdb44;
+        text-shadow: 0 1px 0 #fff, 0 2px 8px #b2dfdb44;
     }
-        .main-subtitle {
-            font-size: 1.05rem;
-            color: #555;
-            font-weight: 400;
-            margin-left: 2.7rem;
-            margin-top: 2px;
-            margin-bottom: 0;
-            letter-spacing: 0.1px;
-        }
+    .main-subtitle {
+        font-size: 1.08rem;
+        color: #555;
+        font-weight: 500;
+        margin-left: 2.7rem;
+        margin-top: 2px;
+        margin-bottom: 0;
+        letter-spacing: 0.1px;
+    }
+    .main-desc {
+        font-size: 1.01rem;
+        color: #333;
+        margin-left: 0.5rem;
+        margin-bottom: 0.5rem;
+        margin-top: 0.5rem;
+    }
     </style>
     <div class="main-bg">
         <div class="main-title-row">
             <span class="main-title-icon">💡</span>
             <span class="main-title">AI-Powered Blinkit Business Decision Platform</span>
         </div>
-            <div class="main-subtitle">Empowering data-driven decisions for modern retail operations</div>
+        <div class="main-subtitle">Unified analytics, ML, and business insights for retail operations</div>
     </div>
 ''', unsafe_allow_html=True)
 
@@ -77,7 +232,7 @@ st.sidebar.markdown(
         font-size: 1.18rem;
         font-weight: 700;
         color: #009e60;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
         gap: 8px;
     }
     </style>
@@ -94,9 +249,10 @@ page = st.sidebar.radio('Go to', [
 
 # Sidebar date filters (only for Dashboard)
 if page == '📊 Dashboard':
-    st.sidebar.header('Filters')
-    start_date = st.sidebar.date_input('Start date', value=date(2024, 11, 1))
-    end_date   = st.sidebar.date_input('End date', value=date(2024, 12, 31))
+    st.sidebar.header('Dashboard Filters')
+    st.sidebar.caption('Select a date range to filter the dashboard metrics and charts.')
+    start_date = st.sidebar.date_input('Start date', value=date(2024, 11, 1), help="Show data from this date onward.")
+    end_date   = st.sidebar.date_input('End date', value=date(2024, 12, 31), help="Show data up to this date.")
 
 
 
@@ -129,7 +285,7 @@ if page == '📊 Dashboard':
     master = load_master_from_db(start_date, end_date)
     master_f = master
 
-    # Enhanced KPI cards with gradient, icon, and hover effect
+    # Enhanced KPI cards with gradient, icon, hover effect, and descriptions
     st.markdown("""
         <style>
         .kpi-card {
@@ -164,6 +320,12 @@ if page == '📊 Dashboard':
             color: #222;
             margin-bottom: 2px;
         }
+        .kpi-desc {
+            font-size: 0.98rem;
+            color: #555;
+            margin-top: 2px;
+            margin-bottom: 0;
+        }
         .kpi-icon {
             font-size: 1.3em;
             vertical-align: middle;
@@ -172,20 +334,21 @@ if page == '📊 Dashboard':
     """, unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">💰</span> Total Revenue <span title="Sum of all order revenue">ℹ️</span></div><div class="kpi-value">₹{master_f["total_revenue"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">💰</span> Total Revenue <span title="Sum of all order revenue">ℹ️</span></div><div class="kpi-value">₹{master_f["total_revenue"].sum():,.0f}</div><div class="kpi-desc">Total sales revenue for the selected period.</div></div>', unsafe_allow_html=True)
     with c2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📢</span> Total Spend <span title="Sum of all marketing spend">ℹ️</span></div><div class="kpi-value">₹{master_f["total_spend"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📢</span> Total Spend <span title="Sum of all marketing spend">ℹ️</span></div><div class="kpi-value">₹{master_f["total_spend"].sum():,.0f}</div><div class="kpi-desc">Total marketing spend for the selected period.</div></div>', unsafe_allow_html=True)
     with c3:
         roas = f'{master_f["roas"].mean():.2f}' if 'roas' in master_f and not master_f['roas'].isna().all() else 'N/A'
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📈</span> Avg ROAS <span title="Return on Ad Spend">ℹ️</span></div><div class="kpi-value">{roas}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📈</span> Avg ROAS <span title="Return on Ad Spend">ℹ️</span></div><div class="kpi-value">{roas}</div><div class="kpi-desc">Average Return on Ad Spend (ROAS) for the period.</div></div>', unsafe_allow_html=True)
     with c4:
         orders = f'{int(master_f["orders_count"].sum())}' if 'orders_count' in master_f else 'N/A'
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🛒</span> Orders <span title="Total number of orders">ℹ️</span></div><div class="kpi-value">{orders}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🛒</span> Orders <span title="Total number of orders">ℹ️</span></div><div class="kpi-value">{orders}</div><div class="kpi-desc">Total number of orders placed.</div></div>', unsafe_allow_html=True)
 
     st.markdown('<hr style="margin: 30px 0 20px 0; border: none; border-top: 2px solid #e0e0e0;">', unsafe_allow_html=True)
 
     # Dual-axis: Revenue vs Spend
     with st.expander('📊 Marketing ROI (ROAS): Revenue vs Spend', expanded=True):
+        st.caption('This chart compares daily revenue and marketing spend to visualize marketing efficiency and ROI trends.')
         fig = go.Figure()
         if not master_f.empty:
             fig.add_trace(go.Scatter(x=master_f['day'], y=master_f['total_revenue'], name='Revenue',
@@ -200,14 +363,12 @@ if page == '📊 Dashboard':
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info('No data to display.')
-
-
-
     
 
 # Model Training Page
 elif page == '🛠️ Model Training':
     st.markdown('<h2 style="color:#009e60;display:flex;align-items:center;gap:10px;">🛠️ Model Training <span style="font-size:1.1rem; color:#888;">(Delay Risk)</span></h2>', unsafe_allow_html=True)
+    st.caption('Retrain the delivery delay risk model using the latest available data. The model predicts the probability of late deliveries based on region, day, and hour.')
     st.info('Click the button below to retrain the delay risk model using the latest data.', icon="ℹ️")
     if st.button('🔄 Retrain Delay Risk Model'):
         with st.spinner('Training model...'):
@@ -224,7 +385,7 @@ elif page == '🛠️ Model Training':
 # Delay Risk Calculator Page
 elif page == '🛵 Delay Risk Calculator':
     st.markdown('<h2 style="color:#009e60;display:flex;align-items:center;gap:10px;">🛵 Delay Risk Calculator</h2>', unsafe_allow_html=True)
-    st.caption('Estimate the risk of delivery delay for a given region, day, and hour.')
+    st.caption('Estimate the risk of delivery delay for a given region, day, and hour. Use the controls below to select your scenario and get a risk assessment.')
 
     @st.cache_resource
     def load_model(model_path):
@@ -238,10 +399,19 @@ elif page == '🛵 Delay Risk Calculator':
         if auc: st.caption(f"Model AUC: {auc:.3f}")
 
         with st.form('risk_form'):
-            region = st.selectbox('Region', options=['Indiranagar', 'Koramangala', 'Whitefield', 'Unknown'], help="Select the delivery region.")
-            day_of_week = st.selectbox('Day of Week (Mon=0)', options=list(range(7)), help="0=Monday, 6=Sunday")
-            hour_of_day = st.slider('Hour of Day', min_value=0, max_value=23, value=18, help="Select the hour of the day.")
-            submitted = st.form_submit_button('Calculate Risk')
+            
+            # Load region options from the database
+            @st.cache_data
+            def get_region_options():
+                df = fetch_query("SELECT distinct(area) as area FROM blinkit.blinkit_customers;")
+                if df is not None and not df.empty:
+                    return sorted(df['area'].dropna().unique().tolist())
+                return []
+            region_options = get_region_options()
+            region = st.selectbox('Region', options=region_options if region_options else ['Unknown'], help="Select the delivery region (e.g., city or area).")
+            day_of_week = st.selectbox('Day of Week (Mon=0)', options=list(range(7)), help="0=Monday, 6=Sunday. Choose the day for the delivery.")
+            hour_of_day = st.slider('Hour of Day', min_value=0, max_value=23, value=18, help="Select the hour of the day for delivery.")
+            submitted = st.form_submit_button('Calculate Risk', help="Click to estimate the probability of a late delivery.")
         if submitted:
             X = pd.DataFrame({'region':[region], 'day_of_week':[day_of_week], 'hour_of_day':[hour_of_day]})
             prob = clf.predict_proba(X)[:, 1][0]
@@ -256,12 +426,13 @@ elif page == '🛵 Delay Risk Calculator':
 
     
 
-# AI Business Assistant (RAG) Page
+# AI Business Assistant (RAG) Page - Retrieval-Augmented Generation
 elif page == '🤖 AI Business Assistant (RAG)':
     st.markdown('<h2 style="color:#009e60;display:flex;align-items:center;gap:10px;">🤖 AI Business Assistant <span style="font-size:1.1rem; color:#888;">(RAG)</span></h2>', unsafe_allow_html=True)
-    st.caption('Ask: “Why did sales drop yesterday?” or “Why are customers angry?”')
+    st.caption('Ask business questions and get AI-powered answers based on customer feedback and sales data. Example: “Why did sales drop yesterday?” or “Why are customers angry?”')
 
     with st.expander('💬 Ask a business question (RAG)', expanded=True):
+        st.caption('Type your business question below. The assistant will search customer feedback and provide a relevant answer using AI.')
         # Hugging Face Transformers + SentenceTransformers RAG (no API key needed)
         try:
             from transformers import pipeline
@@ -292,7 +463,26 @@ elif page == '🤖 AI Business Assistant (RAG)':
                     prompt = f"Question: {q}\nContext:\n{context}\nAnswer:"
                     result = llm(prompt, max_new_tokens=256, do_sample=True, temperature=0.7)
                     st.markdown('**Assistant Answer:**')
-                    st.write(result[0]['generated_text'].split('Answer:')[-1].strip())
+                    # Improved answer extraction: get everything after the last 'Answer:' or fallback to the whole output
+                    generated = result[0]['generated_text']
+                    if 'Answer:' in generated:
+                        answer = generated.split('Answer:')[-1].strip()
+                        # If answer is too short, try to recover more text
+                        if len(answer) < 10:
+                            # Try to get everything after the first 'Answer:'
+                            answer = generated.split('Answer:',1)[-1].strip()
+                    else:
+                        answer = generated.strip()
+                    # Remove only excessive consecutive repetition
+                    lines = answer.splitlines()
+                    cleaned_lines = []
+                    prev = None
+                    for line in lines:
+                        if line.strip() != prev:
+                            cleaned_lines.append(line)
+                            prev = line.strip()
+                    final_answer = "\n".join(cleaned_lines).strip()
+                    st.markdown(final_answer if final_answer else answer, unsafe_allow_html=True)
         except Exception as e:
             st.warning(f'RAG features are optional and need Hugging Face Transformers/SentenceTransformers. ({e})')
 

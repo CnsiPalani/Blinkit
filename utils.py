@@ -1,32 +1,31 @@
 
 
-import mysql.connector
+from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
 import os
 
-def get_db_connection():
+def get_db_engine():
     """
-    Establishes and returns a MySQL database connection using environment variables.
+    Establishes and returns a SQLAlchemy engine for MySQL using environment variables.
     """
-    conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=int(os.getenv("DB_PORT", "3306")),
-        database=os.getenv("DB_NAME", "blinkit"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "password")
-    )
-    return conn
+    user = os.getenv("DB_USER", "root")
+    password = os.getenv("DB_PASSWORD", "password")
+    host = os.getenv("DB_HOST", "localhost")
+    port = os.getenv("DB_PORT", "3306")
+    db = os.getenv("DB_NAME", "blinkit")
+    # Using pymysql as the MySQL driver
+    url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}"
+    engine = create_engine(url)
+    return engine
 
 def fetch_query(query, params=None):
     """
     Executes a SQL query and returns the result as a pandas DataFrame.
     """
-    conn = get_db_connection()
-    try:
+    engine = get_db_engine()
+    with engine.connect() as conn:
         df = pd.read_sql(query, conn, params=params)
-    finally:
-        conn.close()
     return df
 
 def safe_parse_datetime(series):
